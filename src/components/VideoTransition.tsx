@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Video } from '@/types/video';
 import { useVideoPlayback } from '@/hooks/useVideoPlayback';
@@ -18,8 +18,7 @@ export function VideoTransition({
   onCanPlay,
   onLoadStart,
 }: VideoTransitionProps) {
-  const [key, setKey] = useState(video.id);
-  const { videoRef, isReady } = useVideoPlayback({
+  const { videoRef, isReady, isLoading } = useVideoPlayback({
     video,
     isPlaying,
     onEnded,
@@ -27,16 +26,12 @@ export function VideoTransition({
     onLoadStart,
   });
 
-  useEffect(() => {
-    setKey(video.id);
-  }, [video.id]);
-
   return (
-    <AnimatePresence mode="wait">
+    <AnimatePresence>
       <motion.div
-        key={key}
+        key={video.id}
         initial={{ opacity: 0 }}
-        animate={{ opacity: isReady ? 1 : 0 }}
+        animate={{ opacity: isLoading ? 0.5 : isReady ? 1 : 0 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
         className="absolute inset-0"
@@ -46,11 +41,10 @@ export function VideoTransition({
           className="w-full h-full object-cover"
           muted
           playsInline
-          preload="none"
+          autoPlay
           onEnded={onEnded}
         >
           <source src={video.url} type="video/mp4" />
-          Your browser does not support the video tag.
         </video>
       </motion.div>
     </AnimatePresence>
