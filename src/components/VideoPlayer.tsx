@@ -1,8 +1,9 @@
-import React, { useRef, useEffect, useCallback, useState } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { VideoControls } from './VideoControls';
 import { VideoCredits } from './VideoCredits';
 import { useVideoPlaylist } from '../hooks/useVideoPlaylist';
 import { useControlsVisibility } from '../hooks/useControlsVisibility';
+import { VideoTransition } from './VideoTransition';
 import { LoadingScreen } from './LoadingScreen';
 
 interface VideoPlayerProps {
@@ -12,10 +13,23 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({ isPlaying, onExit }: VideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { currentVideo, nextVideo, previousVideo, currentIndex, totalVideos } = useVideoPlaylist();
+  const { 
+    currentVideo, 
+    nextVideo, 
+    previousVideo, 
+    currentIndex, 
+    totalVideos, 
+    resetPlaylist
+  } = useVideoPlaylist();
   const { isVisible, showControls } = useControlsVisibility();
+
+  // Reset playlist when screensaver starts
+  useEffect(() => {
+    if (isPlaying) {
+      resetPlaylist();
+    }
+  }, [isPlaying, resetPlaylist]);
 
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
     if (isPlaying) {
@@ -49,37 +63,12 @@ export function VideoPlayer({ isPlaying, onExit }: VideoPlayerProps) {
     setIsLoading(false);
   }, []);
 
-  // Handle video playback when the loading state or isPlaying changes
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    if (isPlaying && !isLoading) {
-      const playPromise = video.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          // Autoplay was prevented, handle this case if needed
-        });
-      }
-    }
-  }, [isPlaying, isLoading]);
-
-  // Handle video source changes
-  useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    setIsLoading(true);
-    video.load();
-  }, [currentVideo.url]);
-
   useEffect(() => {
     const container = containerRef.current;
-
     if (isPlaying && container) {
-      container.requestFullscreen();
+      container.requestFullscreen().catch(console.error);
     } else if (!isPlaying && document.fullscreenElement) {
-      document.exitFullscreen();
+      document.exitFullscreen().catch(console.error);
     }
   }, [isPlaying]);
 
@@ -106,17 +95,13 @@ export function VideoPlayer({ isPlaying, onExit }: VideoPlayerProps) {
       onClick={nextVideo}
       onMouseMove={handleMouseMove}
     >
-      <video
-        ref={videoRef}
-        className="w-full h-full object-cover"
-        muted
-        playsInline
+      <VideoTransition
+        video={currentVideo}
+        isPlaying={isPlaying}
         onEnded={handleVideoEnd}
         onLoadStart={handleLoadStart}
         onCanPlay={handleCanPlay}
-      >
-        <source src={currentVideo.url} type="video/mp4" />
-      </video>
+      />
 
       {isLoading && <LoadingScreen />}
 
