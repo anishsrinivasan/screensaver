@@ -61,7 +61,7 @@ function App() {
               </span>
               <span className="text-slate-700">•</span>
               <a
-                href="https://github.com/anishsrinivasan/screensaver"
+                href="https://github.com/anishsrinivasan/screensaver-pro"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors"
