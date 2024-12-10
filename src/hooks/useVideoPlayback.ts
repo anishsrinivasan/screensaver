@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Video } from '@/types/video';
 
 interface UseVideoPlaybackProps {
@@ -18,110 +18,97 @@ export function useVideoPlayback({
 }: UseVideoPlaybackProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isReady, setIsReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const playAttempts = useRef(0);
-  const maxPlayAttempts = 5;
-  const attemptTimeout = useRef<number>();
-  const isLoadingRef = useRef(false);
+  const maxPlayAttempts = 3;
 
-  const attemptPlay = async () => {
-    const videoElement = videoRef.current;
-    if (!videoElement || !isPlaying || isLoadingRef.current) return;
+  const play = useCallback(async () => {
+    const video = videoRef.current;
+    if (!video || !isPlaying) return;
 
     try {
-      await videoElement.play();
-      playAttempts.current = 0;
+      await video.play();
       setIsReady(true);
+      setIsLoading(false);
+      playAttempts.current = 0;
     } catch (error) {
-      console.warn('Playback attempt failed:', error);
-      
+      console.error('Failed to play video:', error);
       if (playAttempts.current < maxPlayAttempts) {
         playAttempts.current++;
-        attemptTimeout.current = window.setTimeout(
-          attemptPlay,
-          Math.min(1000 * playAttempts.current, 5000)
-        );
+        setTimeout(play, 1000);
+      } else {
+        setIsReady(false);
+        console.error('Max play attempts reached');
       }
     }
-  };
+  }, [isPlaying]);
 
-  // Reset state when video changes
+  // Handle video events
   useEffect(() => {
-    setIsReady(false);
-    playAttempts.current = 0;
-    isLoadingRef.current = true;
-
-    if (attemptTimeout.current) {
-      clearTimeout(attemptTimeout.current);
-    }
-
-    const videoElement = videoRef.current;
-    if (videoElement) {
-      videoElement.currentTime = 0;
-      videoElement.load();
-    }
-  }, [video.url]); // Changed from video.id to video.url to ensure proper reloading
-
-  // Handle video loading and metadata
-  useEffect(() => {
-    const videoElement = videoRef.current;
-    if (!videoElement) return;
+    const video = videoRef.current;
+    if (!video) return;
 
     const handleLoadStart = () => {
-      isLoadingRef.current = true;
       setIsReady(false);
+      setIsLoading(true);
       onLoadStart();
     };
 
     const handleCanPlay = () => {
-      isLoadingRef.current = false;
+      setIsLoading(false);
       onCanPlay();
-      if (isPlaying) attemptPlay();
+      if (isPlaying) {
+        play();
+      }
     };
 
-    const handleLoadedMetadata = () => {
-      if (isPlaying && !isLoadingRef.current) attemptPlay();
+    const handleEnded = () => {
+      setIsReady(false);
+      onEnded();
     };
 
     const handleError = (e: Event) => {
-      const target = e.target as HTMLVideoElement;
-      console.error('Video loading error:', target.error);
-      isLoadingRef.current = false;
+      console.error('Video error:', (e.target as HTMLVideoElement).error);
+      setIsLoading(false);
+      setIsReady(false);
     };
 
-    videoElement.addEventListener('loadstart', handleLoadStart);
-    videoElement.addEventListener('canplay', handleCanPlay);
-    videoElement.addEventListener('loadedmetadata', handleLoadedMetadata);
-    videoElement.addEventListener('error', handleError);
+    video.addEventListener('loadstart', handleLoadStart);
+    video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener('ended', handleEnded);
+    video.addEventListener('error', handleError);
 
     return () => {
-      videoElement.removeEventListener('loadstart', handleLoadStart);
-      videoElement.removeEventListener('canplay', handleCanPlay);
-      videoElement.removeEventListener('loadedmetadata', handleLoadedMetadata);
-      videoElement.removeEventListener('error', handleError);
+      video.removeEventListener('loadstart', handleLoadStart);
+      video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener('ended', handleEnded);
+      video.removeEventListener('error', handleError);
     };
-  }, [isPlaying, onCanPlay, onLoadStart]);
+  }, [isPlaying, onCanPlay, onEnded, onLoadStart, play]);
 
   // Handle play state changes
   useEffect(() => {
-    const videoElement = videoRef.current;
-    if (!videoElement) return;
+    const video = videoRef.current;
+    if (!video) return;
 
-    if (isPlaying && !isLoadingRef.current) {
-      attemptPlay();
-    } else if (!isPlaying) {
-      videoElement.pause();
+    if (isPlaying) {
+      play();
+    } else {
+      video.pause();
       setIsReady(false);
     }
+  }, [isPlaying, play]);
 
-    return () => {
-      if (attemptTimeout.current) {
-        clearTimeout(attemptTimeout.current);
-      }
-    };
-  }, [isPlaying]);
+  // Load new video when URL changes
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
 
-  return {
-    videoRef,
-    isReady,
-  };
+    setIsReady(false);
+    setIsLoading(true);
+    playAttempts.current = 0;
+    video.load();
+  }, [video.url]);
+
+  return { videoRef, isReady, isLoading };
 }
