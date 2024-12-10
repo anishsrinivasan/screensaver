@@ -1,59 +1,58 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Video } from '@/types/video';
+import { useVideoPlayback } from '@/hooks/useVideoPlayback';
 
 interface VideoTransitionProps {
-  currentUrl: string;
+  video: Video;
   isPlaying: boolean;
   onEnded: () => void;
+  onCanPlay: () => void;
+  onLoadStart: () => void;
 }
 
-export function VideoTransition({ currentUrl, isPlaying, onEnded }: VideoTransitionProps) {
-  const currentVideoRef = useRef<HTMLVideoElement>(null);
-  const previousVideoRef = useRef<HTMLVideoElement>(null);
+export function VideoTransition({
+  video,
+  isPlaying,
+  onEnded,
+  onCanPlay,
+  onLoadStart,
+}: VideoTransitionProps) {
+  const [key, setKey] = useState(video.id);
+  const { videoRef, isReady } = useVideoPlayback({
+    video,
+    isPlaying,
+    onEnded,
+    onCanPlay,
+    onLoadStart,
+  });
 
   useEffect(() => {
-    const currentVideo = currentVideoRef.current;
-    const previousVideo = previousVideoRef.current;
-
-    if (currentVideo && previousVideo) {
-      // Start playing the new video
-      currentVideo.load();
-      if (isPlaying) {
-        const playPromise = currentVideo.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(() => {});
-        }
-      }
-
-      // Fade out the previous video
-      previousVideo.style.opacity = '1';
-      setTimeout(() => {
-        previousVideo.style.opacity = '0';
-      }, 0);
-
-      // After transition, update the previous video source
-      setTimeout(() => {
-        previousVideo.src = currentUrl;
-      }, 1000);
-    }
-  }, [currentUrl, isPlaying]);
+    setKey(video.id);
+  }, [video.id]);
 
   return (
-    <>
-      <video
-        ref={previousVideoRef}
-        className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
-        muted
-        playsInline
-      />
-      <video
-        ref={currentVideoRef}
-        className="w-full h-full object-cover"
-        muted
-        playsInline
-        onEnded={onEnded}
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={key}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: isReady ? 1 : 0 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5 }}
+        className="absolute inset-0"
       >
-        <source src={currentUrl} type="video/mp4" />
-      </video>
-    </>
+        <video
+          ref={videoRef}
+          className="w-full h-full object-cover"
+          muted
+          playsInline
+          preload="none"
+          onEnded={onEnded}
+        >
+          <source src={video.url} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </motion.div>
+    </AnimatePresence>
   );
 }
