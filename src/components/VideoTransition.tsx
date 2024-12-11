@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Video } from '@/types/video';
 import { useVideoPlayback } from '@/hooks/useVideoPlayback';
+import { VideoElement } from './ui/video/video-element';
 
 interface VideoTransitionProps {
   video: Video;
@@ -18,7 +19,7 @@ export function VideoTransition({
   onCanPlay,
   onLoadStart,
 }: VideoTransitionProps) {
-  const { videoRef, isReady, isLoading } = useVideoPlayback({
+  const { videoRef, isReady } = useVideoPlayback({
     video,
     isPlaying,
     onEnded,
@@ -27,25 +28,32 @@ export function VideoTransition({
   });
 
   return (
-    <AnimatePresence>
+    <AnimatePresence mode="wait">
       <motion.div
         key={video.id}
-        initial={{ opacity: 1 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.5 }}
-        className="absolute inset-0"
+        initial={{ opacity: 0 }}
+        animate={{ 
+          opacity: 1,
+          transition: { duration: 0.8, ease: 'easeInOut' }
+        }}
+        exit={{ 
+          opacity: 0,
+          transition: { duration: 0.8, ease: 'easeInOut' }
+        }}
+        className="absolute inset-0 bg-black motion-div"
       >
-        <video
+        <VideoElement
           ref={videoRef}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover transition-opacity duration-800 ${
+            isReady ? 'opacity-100' : 'opacity-0'
+          }`}
           muted
           playsInline
           autoPlay
           onEnded={onEnded}
         >
           <source src={video.url} type="video/mp4" />
-        </video>
+        </VideoElement>
       </motion.div>
     </AnimatePresence>
   );
