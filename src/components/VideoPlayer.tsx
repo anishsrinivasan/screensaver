@@ -3,6 +3,7 @@ import { VideoControls } from './VideoControls';
 import { VideoCredits } from './VideoCredits';
 import { useVideoPlaylist } from '../hooks/useVideoPlaylist';
 import { useControlsVisibility } from '../hooks/useControlsVisibility';
+import { useVideoState } from '../hooks/useVideoState';
 import { VideoTransition } from './VideoTransition';
 import { LoadingScreen } from './LoadingScreen';
 
@@ -13,7 +14,6 @@ interface VideoPlayerProps {
 
 export function VideoPlayer({ isPlaying, onExit }: VideoPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const { 
     currentVideo, 
     nextVideo, 
@@ -23,9 +23,11 @@ export function VideoPlayer({ isPlaying, onExit }: VideoPlayerProps) {
     resetPlaylist
   } = useVideoPlaylist();
   const { isVisible, showControls } = useControlsVisibility();
+  const { isLoading, handleLoadStart, handleCanPlay } = useVideoState();
 
   useEffect(() => {
     if (isPlaying) {
+      console.log('[Player] Starting playback session');
       resetPlaylist();
     }
   }, [isPlaying, resetPlaylist]);
@@ -35,8 +37,10 @@ export function VideoPlayer({ isPlaying, onExit }: VideoPlayerProps) {
     
     if (e.code === 'Space' || e.code === 'ArrowRight') {
       e.preventDefault();
+      console.log('[Player] Next video triggered by keyboard:', e.code);
       nextVideo();
     } else if (e.code === 'ArrowLeft') {
+      console.log('[Player] Previous video triggered by keyboard:', e.code);
       previousVideo();
     }
     showControls();
@@ -51,6 +55,7 @@ export function VideoPlayer({ isPlaying, onExit }: VideoPlayerProps) {
   useEffect(() => {
     const container = containerRef.current;
     if (isPlaying && container) {
+      console.log('[Player] Requesting fullscreen');
       container.requestFullscreen().catch(console.error);
     }
   }, [isPlaying]);
@@ -63,6 +68,7 @@ export function VideoPlayer({ isPlaying, onExit }: VideoPlayerProps) {
   useEffect(() => {
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
+        console.log('[Player] Exiting fullscreen - stopping playback');
         onExit();
       }
     };
@@ -71,19 +77,27 @@ export function VideoPlayer({ isPlaying, onExit }: VideoPlayerProps) {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, [onExit]);
 
+  const handleVideoEnd = useCallback(() => {
+    console.log('[Player] Video ended - moving to next');
+    nextVideo();
+  }, [nextVideo]);
+
   return (
     <div 
       ref={containerRef}
       className={`w-full h-full ${isPlaying ? 'fixed inset-0 bg-black z-50' : 'hidden'}`}
-      onClick={nextVideo}
+      onClick={() => {
+        console.log('[Player] Next video triggered by click');
+        nextVideo();
+      }}
       onMouseMove={handleMouseMove}
     >
       <VideoTransition
         video={currentVideo}
         isPlaying={isPlaying}
-        onEnded={nextVideo}
-        onLoadStart={() => setIsLoading(true)}
-        onCanPlay={() => setIsLoading(false)}
+        onEnded={handleVideoEnd}
+        onLoadStart={handleLoadStart}
+        onCanPlay={handleCanPlay}
       />
 
       {isLoading && <LoadingScreen />}
