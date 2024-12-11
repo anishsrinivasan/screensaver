@@ -3,6 +3,7 @@ import { VideoPlayer } from './components/VideoPlayer';
 import { StartButton } from './components/StartButton';
 import { BackgroundLines } from './components/ui/background-lines';
 import { Monitor, Github } from 'lucide-react';
+import { InstallPWA } from './components/InstallPWA';
 
 function App() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -20,6 +21,8 @@ function App() {
 
   return (
     <BackgroundLines className="min-h-screen w-full">
+      <InstallPWA />
+      
       {!isPlaying && (
         <div className="absolute inset-0 flex flex-col items-center justify-center p-4 md:p-8">
           <div className="relative w-full max-w-2xl mx-auto text-center space-y-8">
