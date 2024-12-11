@@ -12,6 +12,8 @@ export function useVideoPreload(nextVideo: Video) {
       (connection.effectiveType !== 'slow-2g' && connection.effectiveType !== '2g');
 
     if (shouldPreload && nextVideo?.url && !preloadedUrls.current.has(nextVideo.url)) {
+      console.log('[Preloader] Starting preload for next video:', nextVideo.title);
+      
       // Create a new video element for preloading
       const video = document.createElement('video');
       video.style.display = 'none';
@@ -20,6 +22,7 @@ export function useVideoPreload(nextVideo: Video) {
 
       // Add load event listener
       video.addEventListener('loadeddata', () => {
+        console.log('[Preloader] Successfully preloaded:', nextVideo.title);
         preloadedUrls.current.add(nextVideo.url);
       });
 
@@ -42,7 +45,7 @@ export function useVideoPreload(nextVideo: Video) {
       try {
         video.load();
       } catch (error) {
-        console.warn('Error preloading video:', error);
+        console.warn('[Preloader] Error preloading video:', error);
       }
 
       // Cleanup function
@@ -58,6 +61,7 @@ export function useVideoPreload(nextVideo: Video) {
   // Clear preloaded URLs when component unmounts
   useEffect(() => {
     return () => {
+      console.log('[Preloader] Clearing preloaded URLs cache');
       preloadedUrls.current.clear();
     };
   }, []);
