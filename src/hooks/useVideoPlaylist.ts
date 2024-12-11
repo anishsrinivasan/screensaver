@@ -9,21 +9,35 @@ export function useVideoPlaylist() {
 
   // Shuffle videos when the playlist is initialized
   useEffect(() => {
-    setVideos(shuffle(originalVideos));
+    const shuffledVideos = shuffle(originalVideos);
+    console.log('[Playlist] Initialized with shuffled videos:', 
+      shuffledVideos.map(v => v.title));
+    setVideos(shuffledVideos);
     setCurrentIndex(0);
   }, []);
 
   const nextVideo = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % videos.length);
+    setCurrentIndex((prev) => {
+      const next = (prev + 1) % videos.length;
+      console.log(`[Playlist] Moving to next video: ${videos[next].title}`);
+      return next;
+    });
   }, [videos.length]);
 
   const previousVideo = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + videos.length) % videos.length);
+    setCurrentIndex((prev) => {
+      const next = (prev - 1 + videos.length) % videos.length;
+      console.log(`[Playlist] Moving to previous video: ${videos[next].title}`);
+      return next;
+    });
   }, [videos.length]);
 
   // Reset playlist with new shuffled order
   const resetPlaylist = useCallback(() => {
-    setVideos(shuffle(originalVideos));
+    const shuffledVideos = shuffle(originalVideos);
+    console.log('[Playlist] Resetting with new shuffled order:', 
+      shuffledVideos.map(v => v.title));
+    setVideos(shuffledVideos);
     setCurrentIndex(0);
   }, []);
 
