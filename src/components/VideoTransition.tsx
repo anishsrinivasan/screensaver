@@ -30,8 +30,8 @@ export function VideoTransition({
     <AnimatePresence>
       <motion.div
         key={video.id}
-        initial={{ opacity: 0 }}
-        animate={{ opacity: isLoading ? 0.5 : isReady ? 1 : 0 }}
+        initial={{ opacity: 1 }}
+        animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.5 }}
         className="absolute inset-0"
