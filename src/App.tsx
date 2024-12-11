@@ -5,7 +5,7 @@ import { BackgroundLines } from './components/ui/background-lines';
 import { Monitor, Github } from 'lucide-react';
 import { InstallPWA } from './components/InstallPWA';
 
-function App() {
+export function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
@@ -84,5 +84,3 @@ function App() {
     </BackgroundLines>
   );
 }
-
-export default App;
