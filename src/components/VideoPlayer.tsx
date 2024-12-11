@@ -4,7 +4,7 @@ import { VideoCredits } from './VideoCredits';
 import { Clock } from './Clock';
 import { useVideoPlaylist } from '../hooks/useVideoPlaylist';
 import { useControlsVisibility } from '../hooks/useControlsVisibility';
-import { useVideoState } from '../hooks/useVideoState';
+import { useLoadingState } from '../hooks/useLoadingState';
 import { VideoTransition } from './VideoTransition';
 import { LoadingScreen } from './LoadingScreen';
 
@@ -24,7 +24,7 @@ export function VideoPlayer({ isPlaying, onExit }: VideoPlayerProps) {
     resetPlaylist
   } = useVideoPlaylist();
   const { isVisible, showControls } = useControlsVisibility();
-  const { isLoading, handleLoadStart, handleCanPlay } = useVideoState();
+  const { shouldShowLoader, startLoading, stopLoading } = useLoadingState(2000);
 
   useEffect(() => {
     if (isPlaying) {
@@ -97,11 +97,11 @@ export function VideoPlayer({ isPlaying, onExit }: VideoPlayerProps) {
         video={currentVideo}
         isPlaying={isPlaying}
         onEnded={handleVideoEnd}
-        onLoadStart={handleLoadStart}
-        onCanPlay={handleCanPlay}
+        onLoadStart={startLoading}
+        onCanPlay={stopLoading}
       />
 
-      {isLoading && <LoadingScreen />}
+      {shouldShowLoader && <LoadingScreen />}
 
       {isPlaying && (
         <>
