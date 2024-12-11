@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { VideoControls } from './VideoControls';
 import { VideoCredits } from './VideoCredits';
+import { Clock } from './Clock';
 import { useVideoPlaylist } from '../hooks/useVideoPlaylist';
 import { useControlsVisibility } from '../hooks/useControlsVisibility';
 import { useVideoState } from '../hooks/useVideoState';
@@ -117,6 +118,7 @@ export function VideoPlayer({ isPlaying, onExit }: VideoPlayerProps) {
             source={currentVideo.source}
             isVisible={isVisible}
           />
+          <Clock isVisible={true} />
         </>
       )}
     </div>
