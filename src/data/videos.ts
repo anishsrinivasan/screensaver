@@ -7,13 +7,6 @@ export const videos = [
     url: "https://videos.pexels.com/video-files/4870147/4870147-hd_1920_1080_24fps.mp4",
   },
   {
-    id: 2,
-    title: "Scenic Winter Sunset Over Snowy Scandinavian Forest",
-    author: "Sergey Guk",
-    source: "https://www.pexels.com/video/scenic-winter-sunset-over-snowy-scandinavian-forest-29708728/",
-    url: "https://videos.pexels.com/video-files/29708728/12774881_3840_2160_60fps.mp4",
-  },
-  {
     id: 3,
     title: "Waves Rushing And Splashing To The Shore",
     author: "Michal Marek",
