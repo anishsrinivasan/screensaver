@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
+import { VIDEO_PLAYER_CONFIG } from '@/config/constants';
 
-export function useLoadingState(delay = 2000) {
+export function useLoadingState(delay = VIDEO_PLAYER_CONFIG.LOADING_DELAY) {
   const [isLoading, setIsLoading] = useState(false);
   const [shouldShowLoader, setShouldShowLoader] = useState(false);
   const loadingTimeout = useRef<number>();

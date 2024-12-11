@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
+import { VIDEO_PLAYER_CONFIG } from '@/config/constants';
 
-export function useControlsVisibility(timeout = 3000) {
+export function useControlsVisibility(timeout = VIDEO_PLAYER_CONFIG.CONTROLS_TIMEOUT) {
   const [isVisible, setIsVisible] = useState(false);
   let timeoutId: number;
 
