@@ -4,6 +4,20 @@ A beautiful fullscreen video experience built with React and TypeScript. This ap
 
 URL : https://screensaver-six.vercel.app/
 
+<div align="center">
+
+![Screenshot 1](assets/1.png)
+
+<br/>
+
+![Screenshot 2](assets/2.png)
+
+<br/>
+
+![Screenshot 3](assets/3.png)
+
+</div>
+
 ## Features
 
 - 🎥 High-quality videos
