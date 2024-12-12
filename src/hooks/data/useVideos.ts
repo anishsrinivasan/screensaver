@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
-import { getVideos } from '@/lib/supabase';
-import type { Video } from '@/types/video';
+import { useState, useEffect } from "react";
+import { getVideos } from "@/lib/supabase";
+import type { Video } from "@/types/video";
+import { fallbackVideos } from "@/data/videos";
 
 export function useVideos() {
   const [videos, setVideos] = useState<Video[]>([]);
@@ -18,7 +19,10 @@ export function useVideos() {
         }
       } catch (err) {
         if (isMounted) {
-          setError(err instanceof Error ? err : new Error('Failed to fetch videos'));
+          setVideos(fallbackVideos);
+          setError(
+            err instanceof Error ? err : new Error("Failed to fetch videos")
+          );
         }
       } finally {
         if (isMounted) {
@@ -38,6 +42,6 @@ export function useVideos() {
     videos,
     isLoading,
     error,
-    hasError: error !== null
+    hasError: error !== null,
   };
 }
