@@ -19,15 +19,14 @@ export function VideoCredits({ title, author, source, isVisible }: VideoCreditsP
       `}
     >
       <h2 className="text-lg md:text-2xl font-bold tracking-wide mb-1">{title}</h2>
-      <p className="text-xs md:text-sm text-white/80 font-medium mb-1">{author}</p>
       <a 
         href={source}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-[10px] md:text-xs text-white hover:text-white/90 transition-colors"
+        className="text-white hover:text-white/90 transition-colors"
         onClick={(e) => e.stopPropagation()}
       >
-        Source
+        <p className="text-xs md:text-sm text-white/80 font-medium mb-1">{author}</p>
       </a>
     </div>
   );
