@@ -1,7 +1,8 @@
 import { useEffect, useRef, useCallback } from 'react';
 import { Video } from '@/types/video';
-import { useVideoEvents } from './video/useVideoEvents';
-import { useVideoState } from './video/useVideoState';
+import { useVideoEvents } from './useVideoEvents';
+import { useVideoState } from './useVideoState';
+import { VIDEO_PLAYER_CONFIG } from '@/config/constants';
 
 interface UseVideoPlaybackProps {
   video: Video;
@@ -21,7 +22,6 @@ export function useVideoPlayback({
   const videoRef = useRef<HTMLVideoElement>(null);
   const { isReady, setReady, resetState } = useVideoState();
   const playAttempts = useRef(0);
-  const maxPlayAttempts = 3;
 
   const play = useCallback(async () => {
     const videoElement = videoRef.current;
@@ -33,9 +33,9 @@ export function useVideoPlayback({
       playAttempts.current = 0;
     } catch (error) {
       console.error(`[Video] Failed to play:`, error);
-      if (playAttempts.current < maxPlayAttempts) {
+      if (playAttempts.current < VIDEO_PLAYER_CONFIG.PLAY_ATTEMPTS) {
         playAttempts.current++;
-        setTimeout(play, 1000);
+        setTimeout(play, VIDEO_PLAYER_CONFIG.PLAY_RETRY_DELAY);
       }
     }
   }, [isPlaying, setReady]);
@@ -51,7 +51,6 @@ export function useVideoPlayback({
     play,
   });
 
-  // Handle play/pause state changes
   useEffect(() => {
     const videoElement = videoRef.current;
     if (!videoElement) return;
@@ -64,7 +63,6 @@ export function useVideoPlayback({
     }
   }, [isPlaying, play, setReady]);
 
-  // Reset state when video source changes
   useEffect(() => {
     if (!video?.url) return;
     

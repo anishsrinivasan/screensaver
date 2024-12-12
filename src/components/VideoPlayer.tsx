@@ -2,11 +2,12 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { VideoControls } from './VideoControls';
 import { VideoCredits } from './VideoCredits';
 import { Clock } from './Clock';
-import { useVideoPlaylist } from '../hooks/useVideoPlaylist';
-import { useControlsVisibility } from '../hooks/useControlsVisibility';
-import { useLoadingState } from '../hooks/useLoadingState';
+import { useVideoPlaylist } from '@/hooks/useVideoPlaylist';
+import { useControlsVisibility } from '@/hooks/useControlsVisibility';
+import { useLoadingState } from '@/hooks/useLoadingState';
 import { VideoTransition } from './VideoTransition';
 import { LoadingScreen } from './LoadingScreen';
+import { VIDEO_PLAYER_CONFIG } from '@/config/constants';
 
 interface VideoPlayerProps {
   isPlaying: boolean;
@@ -20,21 +21,25 @@ export function VideoPlayer({ isPlaying, onExit }: VideoPlayerProps) {
     nextVideo, 
     previousVideo, 
     currentIndex, 
-    totalVideos, 
-    resetPlaylist
+    totalVideos,
+    resetPlaylist,
+    isLoading: isLoadingVideos,
+    hasVideos
   } = useVideoPlaylist();
-  const { isVisible, showControls } = useControlsVisibility();
-  const { shouldShowLoader, startLoading, stopLoading } = useLoadingState(2000);
+  const { isVisible, showControls } = useControlsVisibility(VIDEO_PLAYER_CONFIG.CONTROLS_TIMEOUT);
+  const { shouldShowLoader, startLoading, stopLoading } = useLoadingState(VIDEO_PLAYER_CONFIG.LOADING_DELAY);
+  const [hasStarted, setHasStarted] = useState(false);
 
   useEffect(() => {
-    if (isPlaying) {
+    if (isPlaying && hasVideos && !hasStarted) {
       console.log('[Player] Starting playback session');
       resetPlaylist();
+      setHasStarted(true);
     }
-  }, [isPlaying, resetPlaylist]);
+  }, [isPlaying, hasVideos, resetPlaylist, hasStarted]);
 
   const handleKeyPress = useCallback((e: KeyboardEvent) => {
-    if (!isPlaying) return;
+    if (!isPlaying || !hasVideos) return;
     
     if (e.code === 'Space' || e.code === 'ArrowRight') {
       e.preventDefault();
@@ -45,7 +50,7 @@ export function VideoPlayer({ isPlaying, onExit }: VideoPlayerProps) {
       previousVideo();
     }
     showControls();
-  }, [isPlaying, nextVideo, previousVideo, showControls]);
+  }, [isPlaying, hasVideos, nextVideo, previousVideo, showControls]);
 
   const handleMouseMove = useCallback(() => {
     if (isPlaying) {
@@ -55,11 +60,11 @@ export function VideoPlayer({ isPlaying, onExit }: VideoPlayerProps) {
 
   useEffect(() => {
     const container = containerRef.current;
-    if (isPlaying && container) {
+    if (isPlaying && container && hasVideos) {
       console.log('[Player] Requesting fullscreen');
       container.requestFullscreen().catch(console.error);
     }
-  }, [isPlaying]);
+  }, [isPlaying, hasVideos]);
 
   useEffect(() => {
     document.addEventListener('keydown', handleKeyPress);
@@ -79,31 +84,40 @@ export function VideoPlayer({ isPlaying, onExit }: VideoPlayerProps) {
   }, [onExit]);
 
   const handleVideoEnd = useCallback(() => {
+    if (!hasVideos) return;
     console.log('[Player] Video ended - moving to next');
     nextVideo();
-  }, [nextVideo]);
+  }, [nextVideo, hasVideos]);
+
+  if (isLoadingVideos) {
+    return <LoadingScreen />;
+  }
 
   return (
     <div 
       ref={containerRef}
       className={`w-full h-full ${isPlaying ? 'fixed inset-0 bg-black z-50' : 'hidden'}`}
       onClick={() => {
-        console.log('[Player] Next video triggered by click');
-        nextVideo();
+        if (hasVideos) {
+          console.log('[Player] Next video triggered by click');
+          nextVideo();
+        }
       }}
       onMouseMove={handleMouseMove}
     >
-      <VideoTransition
-        video={currentVideo}
-        isPlaying={isPlaying}
-        onEnded={handleVideoEnd}
-        onLoadStart={startLoading}
-        onCanPlay={stopLoading}
-      />
+      {currentVideo && (
+        <VideoTransition
+          video={currentVideo}
+          isPlaying={isPlaying}
+          onEnded={handleVideoEnd}
+          onLoadStart={startLoading}
+          onCanPlay={stopLoading}
+        />
+      )}
 
       {shouldShowLoader && <LoadingScreen />}
 
-      {isPlaying && (
+      {isPlaying && currentVideo && (
         <>
           <VideoControls
             onNext={nextVideo}
